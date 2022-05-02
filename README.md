@@ -4,7 +4,6 @@ Developed by Thales Cezar Castro using Node.js and Express
 
 ## Requirements
 - Node.js 16+ LTS
-- NPM
 - Yarn
 
 ## How to run
