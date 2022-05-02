@@ -45,17 +45,14 @@ class RouteController {
 
                     if (options_to_go_next.length) {
 
-                        current_line = choose_best_option(options_to_go_next, consider_traffic)
+                        current_line = this.#choose_best_option(options_to_go_next, consider_traffic)
                         steps.push(
                             {point: current_line.pickup_location, id: current_line.id},
                             {point: current_line.delivery_location, id: current_line.id}
                         )
                         route_distance += current_line.distance
 
-                        const index_to_remove = lines.findIndex(line => line.id == current_line.id)
-                        if (index_to_remove > -1) {
-                            lines.splice(index_to_remove, 1)
-                        }
+                        lines = this.#remove_line(lines, current_line)
 
                     } else {
                         current_line = first_line
@@ -72,17 +69,14 @@ class RouteController {
 
                     if (options_to_go_back.length) {
 
-                        current_line = choose_best_option(options_to_go_back, consider_traffic)
+                        current_line = this.#choose_best_option(options_to_go_back, consider_traffic)
                         steps.unshift(
                             {point: current_line.pickup_location, id: current_line.id},
                             {point: current_line.delivery_location, id: current_line.id}
                         )
                         route_distance += current_line.distance
 
-                        const index_to_remove = lines.findIndex(line => line.id == current_line.id)
-                        if (index_to_remove > -1) {
-                            lines.splice(index_to_remove, 1)
-                        }
+                        lines = this.#remove_line(lines, current_line)
 
                     } else {
                         break
@@ -101,22 +95,33 @@ class RouteController {
 
         return response.status(200).send(routes)
     }
-}
 
-function choose_best_option(options, consider_traffic) {
+    static #choose_best_option(options, consider_traffic) {
 
-    if (options.length == 1) {
-        return options[0]
+        if (options.length == 1) {
+            return options[0]
+        }
+    
+        const sorted = options.sort((path_a, path_b) => {
+            const path_a_result = consider_traffic ? path_a.distance * path_a.traffic : path_a.distance
+            const path_b_result = consider_traffic ? path_b.distance * path_b.traffic : path_b.distance
+    
+            return path_a_result < path_b_result ? -1 : (path_a_result > path_b_result ? 1 : 0)
+        })
+    
+        return sorted[0]
     }
 
-    const sorted = options.sort((path_a, path_b) => {
-        const path_a_result = consider_traffic ? path_a.distance * path_a.traffic : path_a.distance
-        const path_b_result = consider_traffic ? path_b.distance * path_b.traffic : path_b.distance
+    static #remove_line(lines, current_line) {
 
-        return path_a_result < path_b_result ? -1 : (path_a_result > path_b_result ? 1 : 0)
-    })
-
-    return sorted[0]
+        const index_to_remove = lines.findIndex(line => line.id == current_line.id)
+    
+        if (index_to_remove > -1) {
+            lines.splice(index_to_remove, 1)
+        }
+    
+        return lines
+    }
 }
 
 export default RouteController
